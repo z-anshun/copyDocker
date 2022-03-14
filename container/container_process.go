@@ -18,8 +18,8 @@ import (
 这里的/proc/self/exe 调用中，/proc/self/ 指当前运行进程自己的环境，那么后面跟个exe，
 就是自己调用了自己
 */
-func NewParentProcess(tty bool, command string) *exec.Cmd {
-	args := []string{"init", command} // 设置参数
+func NewParentProcess(tty bool) *exec.Cmd {
+	args := []string{"init"} // 设置参数
 	// 这里相当于自己调用自己,即fork，并且跟上参数 init $command，也就进入了 initCommand
 	cmd := exec.Command("/proc/self/exe", args...)
 	// 设置隔离
@@ -40,7 +40,6 @@ func NewParentProcess(tty bool, command string) *exec.Cmd {
 // 使用mount 挂载proc文件系统，以便后续使用 ps 等系统命令查看当前进程资源的情况
 func RunContainerInitProcess(command string, args []string) error {
 	logrus.Infof("command %s", command)
-
 
 	defaultMountFlags:=syscall.MS_NOEXEC|syscall.MS_NOSUID|syscall.MS_NODEV
 
