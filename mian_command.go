@@ -1,6 +1,7 @@
 package main
 
 import (
+	"copyDocker/container"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -47,16 +48,11 @@ var initCommand = cli.Command{
 	*/
 	Action: func(ctx *cli.Context) error {
 		logrus.Infof("init come on")
-		cmd:=ctx.Args().Get(0)
-		logrus.Infof("command %s",cmd)
-		// TODO:run container
+		cmd := ctx.Args().Get(0)
+		logrus.Infof("command %s", cmd)
 
-		return nil
+		return container.RunContainerInitProcess(cmd,nil)
 	},
 }
 
-//TODO: Start 方法前的调用，即init的实现。首先 clone 一个 namespace 隔离进程
-// 然后，在子进程中，调用/proc/self/exe(即自己)，发送init参数，就是实现了init初始化
-func Run(tty bool, command string) {
 
-}
