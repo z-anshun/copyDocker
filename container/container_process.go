@@ -24,7 +24,7 @@ func NewParentProcess(tty bool, command string) *exec.Cmd {
 	cmd := exec.Command("/proc/self/exe", args...)
 	// 设置隔离
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID |syscall.CLONE_NEWNS | syscall.CLONE.NEWNET | syscall.CLONE_NEWIPC,
+		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID |syscall.CLONE_NEWNS | syscall.CLONE_NEWNET | syscall.CLONE_NEWIPC,
 	}
 
 	// 设置了 -it 参数，则需要把当前进程的输入输出导入到标准输入输出上
