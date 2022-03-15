@@ -1,6 +1,7 @@
 package main
 
 import (
+	"copyDocker/cgroups/subsystems"
 	"copyDocker/container"
 	"fmt"
 	"github.com/sirupsen/logrus"
@@ -22,6 +23,10 @@ var runCommand = cli.Command{
 			Name:  "ti",
 			Usage: "use ti",
 		},
+		cli.StringFlag{
+			Name:  "m",
+			Usage: "memory limit",
+		},
 	},
 	// 正在 run 的函数
 	// 1. 判断用户是否包含 command
@@ -31,9 +36,14 @@ var runCommand = cli.Command{
 		if len(ctx.Args()) < 1 {
 			return fmt.Errorf("Missing container command")
 		}
-		cmd := ctx.Args().Get(0)
+		var cmdArray []string
+		for _, arg := range ctx.Args() {
+			cmdArray = append(cmdArray, arg)
+		}
 		tty := ctx.Bool("ti")
-		Run(tty, cmd)
+		Run(tty, cmdArray, &subsystems.ResourceConfig{
+			MemoryLimit: ctx.String("m"),
+		})
 		return nil
 	},
 }
@@ -51,8 +61,6 @@ var initCommand = cli.Command{
 		cmd := ctx.Args().Get(0)
 		logrus.Infof("command %s", cmd)
 
-		return container.RunContainerInitProcess(cmd,nil)
+		return container.RunContainerInitProcess()
 	},
 }
-
-
