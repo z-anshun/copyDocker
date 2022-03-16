@@ -3,6 +3,7 @@ package subsystems
 import (
 	"bufio"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"strings"
@@ -51,6 +52,7 @@ func GetCgroupPath(subsystem string, cgroupPath string, autoCreate bool) (string
 			if err:=os.Mkdir(path.Join(cgroupRoot,cgroupPath),0755);err!=nil{
 				return "",fmt.Errorf("error create cgroup:%v",err)
 			}
+			logrus.Infof("Create Cgroup file succeess: %s",path.Join(cgroupRoot,cgroupPath))
 		}
 		return path.Join(cgroupRoot,cgroupPath), nil
 	}else{

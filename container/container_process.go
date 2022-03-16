@@ -1,12 +1,9 @@
 package container
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 )
 
@@ -48,39 +45,7 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 	return cmd, writePipe
 }
 
-// RunContainerInitProcess 执行到这里了，也就证明容器所在的进程已经创建出来了，那么，这就是容器的第一个进程
-// 使用mount 挂载proc文件系统，以便后续使用 ps 等系统命令查看当前进程资源的情况
-func RunContainerInitProcess() error {
-	cmdArray:=readUserCommand()
-	if cmdArray==nil||len(cmdArray)==0{
-		return fmt.Errorf("Run container get user command error, cmdArray is nil")
-	}
 
-	defaultMountFlags:=syscall.MS_NOEXEC|syscall.MS_NOSUID|syscall.MS_NODEV
-
-	/*
-		MS_NOEXEC：本文件系统不允许运行其它程序
-		MS_NOSUID：本系统中运行程序时，不允许 set-user-ID 或者 set-group-ID
-		MS_NODEV：所有 mount的系统都会默认设定的参数
-	*/
-	// 等价于 mount -t proc -o noexec,nosuid,nodev proc /proc
-	syscall.Mount("proc","/proc","proc",uintptr(defaultMountFlags),"")
-
-	// 查找对应文件名的绝对路径
-	// 即 /bin/sh
-	path,err:=exec.LookPath(cmdArray[0])
-	if err!=nil{
-		logrus.Errorf("Exec loop path error %v",err)
-		return err
-	}
-	logrus.Infof("Find path %s",path)
-	// 注意这里的系统调用，能使在容器中，进行 ps 查看进程时，PID=1为前台进程，而不是init
-	// 该调用会覆盖当前的进程，即覆盖init进程
-	if err := syscall.Exec(path, cmdArray[0:], os.Environ()); err != nil {
-		logrus.Errorf(err.Error())
-	}
-	return nil
-}
 
 // NewPipe 创建管道，对用户参数的缓存，具有 4K 的缓冲区
 func NewPipe() (*os.File, *os.File, error) {
@@ -89,17 +54,4 @@ func NewPipe() (*os.File, *os.File, error) {
 		return nil, nil, err
 	}
 	return read, write, nil
-}
-
-func readUserCommand() []string {
-	// index 为 3 的文件描述符，也就是传递进来管道的一端
-	pipe := os.NewFile(uintptr(3), "pipe")
-
-	msg, err := ioutil.ReadAll(pipe)
-	if err != nil {
-		logrus.Errorf("init read pipe error %v", err)
-		return nil
-	}
-	msgStr := string(msg)
-	return strings.Split(msgStr, " ")
 }

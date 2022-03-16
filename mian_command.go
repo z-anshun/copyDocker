@@ -27,6 +27,14 @@ var runCommand = cli.Command{
 			Name:  "m",
 			Usage: "memory limit",
 		},
+		cli.StringFlag{
+			Name:  "cpushare",
+			Usage: "cpushare limit",
+		},
+		cli.StringFlag{
+			Name:  "cpuset",
+			Usage: "cpuset limit",
+		},
 	},
 	// 正在 run 的函数
 	// 1. 判断用户是否包含 command
@@ -43,6 +51,8 @@ var runCommand = cli.Command{
 		tty := ctx.Bool("ti")
 		Run(tty, cmdArray, &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("m"),
+			CpuShare: ctx.String("cpuset"),
+			CpuSet: ctx.String("cpushare"),
 		})
 		return nil
 	},
@@ -58,9 +68,7 @@ var initCommand = cli.Command{
 	*/
 	Action: func(ctx *cli.Context) error {
 		logrus.Infof("init come on")
-		cmd := ctx.Args().Get(0)
-		logrus.Infof("command %s", cmd)
-
+		logrus.Infof("send in command %s", ctx.Args())
 		return container.RunContainerInitProcess()
 	},
 }
