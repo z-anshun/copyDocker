@@ -54,6 +54,10 @@ var runCommand = cli.Command{
 			CpuShare: ctx.String("cpuset"),
 			CpuSet: ctx.String("cpushare"),
 		})
+		// 直接删除挂载的文件
+		mntURL:="/root/mnt/"
+		rootURL:="/root/"
+		container.DeleteWorkSpace(rootURL,mntURL)
 		return nil
 	},
 }

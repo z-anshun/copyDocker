@@ -36,7 +36,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
 	// 限制完后，开始初始化,并写入命令
 	sendInitCommand(comArray, writePipe)
 	parent.Wait()
-	os.Exit(-1)
+
 }
 
 func sendInitCommand(cmdArray []string, writePipe *os.File) {

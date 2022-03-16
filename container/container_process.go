@@ -42,6 +42,11 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 	// 传入管道读入端，即带着这个文件句柄去创建子进程
 	// 进程默认会有三个文件描述，标准输入、输出、错误。所以这里要绑定一个额外的文件描述符
 	cmd.ExtraFiles = []*os.File{readPipe}
+
+	mntURL:="/root/mnt/"
+	rootURL:="/root/"
+	NewWorkSpace(rootURL,mntURL)
+	cmd.Dir=mntURL
 	return cmd, writePipe
 }
 
