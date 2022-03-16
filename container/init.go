@@ -25,15 +25,7 @@ func RunContainerInitProcess() error {
 		return fmt.Errorf("Run container get user command error, cmdArray is nil")
 	}
 
-	defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
-
-	/*
-		MS_NOEXEC：本文件系统不允许运行其它程序
-		MS_NOSUID：本系统中运行程序时，不允许 set-user-ID 或者 set-group-ID
-		MS_NODEV：所有 mount的系统都会默认设定的参数
-	*/
-	// 等价于 mount -t proc -o noexec,nosuid,nodev proc /proc
-	syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
+	setUpMount()
 
 	// 查找对应文件名的绝对路径
 	// 即 /bin/sh
