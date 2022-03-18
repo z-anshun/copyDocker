@@ -18,7 +18,7 @@ import (
 这里的/proc/self/exe 调用中，/proc/self/ 指当前运行进程自己的环境，那么后面跟个exe，
 就是自己调用了自己
 */
-func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool,volume string) (*exec.Cmd, *os.File) {
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		logrus.Errorf("New pipe error %v", err)
@@ -45,7 +45,7 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 
 	mntURL:="/root/mnt/"
 	rootURL:="/root/"
-	NewWorkSpace(rootURL,mntURL)
+	NewWorkSpace(rootURL,mntURL,volume)
 	cmd.Dir=mntURL
 	return cmd, writePipe
 }

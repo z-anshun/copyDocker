@@ -17,8 +17,8 @@ import (
 
 // Run Start 方法前的调用，即init的实现。首先 clone 一个 namespace 隔离进程
 // 然后，在子进程中，调用/proc/self/exe(即自己)，发送init参数，就是实现了init初始化
-func Run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
-	parent, writePipe := container.NewParentProcess(tty)
+func Run(tty bool, comArray []string,volume string, res *subsystems.ResourceConfig) {
+	parent, writePipe := container.NewParentProcess(tty,volume)
 	if parent == nil {
 		logrus.Errorf("Create New Process error")
 		return

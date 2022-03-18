@@ -35,6 +35,11 @@ var runCommand = cli.Command{
 			Name:  "cpuset",
 			Usage: "cpuset limit",
 		},
+		// 添加 -v 的标签
+		cli.StringFlag{
+			Name: "v",
+			Usage: "volume",
+		},
 	},
 	// 正在 run 的函数
 	// 1. 判断用户是否包含 command
@@ -49,15 +54,16 @@ var runCommand = cli.Command{
 			cmdArray = append(cmdArray, arg)
 		}
 		tty := ctx.Bool("ti")
-		Run(tty, cmdArray, &subsystems.ResourceConfig{
+		volume:=ctx.String("v")
+		Run(tty, cmdArray,volume, &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("m"),
-			CpuShare: ctx.String("cpuset"),
-			CpuSet: ctx.String("cpushare"),
+			CpuShare:    ctx.String("cpuset"),
+			CpuSet:      ctx.String("cpushare"),
 		})
 		// 直接删除挂载的文件
-		mntURL:="/root/mnt/"
-		rootURL:="/root/"
-		container.DeleteWorkSpace(rootURL,mntURL)
+		mntURL := "/root/mnt/"
+		rootURL := "/root/"
+		container.DeleteWorkSpace(rootURL, mntURL,volume)
 		return nil
 	},
 }
