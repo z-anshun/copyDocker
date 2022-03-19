@@ -23,7 +23,7 @@ func NewWorkSpace(rootURL string, mntURL string, volume string) {
 		volumeURLs := volumeUrlExtract(volume)
 		length := len(volumeURLs)
 		if length == 2 && volumeURLs[0] != "" && volumeURLs[1] != "" {
-			MountVolume(rootURL, mntURL, volumeURLs)
+			MountVolume(mntURL, volumeURLs)
 			logrus.Infof("%q", volumeURLs)
 		} else {
 			logrus.Infof("Volume parameter input is not correct .")
@@ -35,7 +35,7 @@ func NewWorkSpace(rootURL string, mntURL string, volume string) {
 // 1. 读取宿主机文件目录URL，创建宿主机文件目录 /root/${parent}
 // 2. 读取容器挂载点URL，在容器文件系统里创建挂载点 /root/mnt/${containerUrl}
 // 3. 把宿主机文件目录挂载到容器挂载点，
-func MountVolume(rootURL string, mntURL string, volumeURLs []string) {
+func MountVolume( mntURL string, volumeURLs []string) {
 	// 创建宿主机文件目录
 	parentUrl := volumeURLs[0]
 	if err := os.Mkdir(parentUrl, 0777); err != nil {
@@ -109,15 +109,17 @@ func CreateMountPoint(rootURL string, mntURL string) {
 // 1. umount mnt 目录
 // 2. 删除 mnt 目录
 // 3. 在 DeleteWriteLayer 函数中删除 writeLayer 文件夹
-func DeleteWorkSpace(rootURL string, mntURL string, volume string) {
+func DeleteWorkSpace( volume string) {
 	if volume != "" {
 		volumeURLs := volumeUrlExtract(volume)
 		length := len(volumeURLs)
 		if length == 2 && volumeURLs[0] != "" && volumeURLs[1] != "" {
-
+			DeleteMountPointWithVolume(rootURL,MntURL,volumeURLs)
+		}else{
+			DeleteMountPoint(rootURL,MntURL)
 		}
 	} else {
-		DeleteMountPoint(rootURL, mntURL)
+		DeleteMountPoint(rootURL, MntURL)
 	}
 
 	DeleteWriteLayer(rootURL)

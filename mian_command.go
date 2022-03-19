@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"os"
 )
 
 /*
@@ -23,6 +24,11 @@ var runCommand = cli.Command{
 			Name:  "ti",
 			Usage: "use ti",
 		},
+		// -d 标签，detach 表示后台运行
+		cli.BoolFlag{
+			Name:  "d",
+			Usage: "detach container",
+		},
 		cli.StringFlag{
 			Name:  "m",
 			Usage: "memory limit",
@@ -37,8 +43,13 @@ var runCommand = cli.Command{
 		},
 		// 添加 -v 的标签
 		cli.StringFlag{
-			Name: "v",
+			Name:  "v",
 			Usage: "volume",
+		},
+		// -name 提供容器 name
+		cli.StringFlag{
+			Name:  "name",
+			Usage: "container name",
 		},
 	},
 	// 正在 run 的函数
@@ -53,17 +64,28 @@ var runCommand = cli.Command{
 		for _, arg := range ctx.Args() {
 			cmdArray = append(cmdArray, arg)
 		}
+
 		tty := ctx.Bool("ti")
-		volume:=ctx.String("v")
-		Run(tty, cmdArray,volume, &subsystems.ResourceConfig{
+		detach := ctx.Bool("d")
+
+		// terminal 和 detach 不能共存
+		if tty && detach {
+			return fmt.Errorf("ti and d paramter can not both provited")
+		}
+		logrus.Infof("CreateTry %v", tty)
+		volume := ctx.String("v")
+
+		// 将容器名传递下去
+		containerName := ctx.String("name")
+
+		Run(tty, cmdArray, volume, &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("m"),
 			CpuShare:    ctx.String("cpuset"),
 			CpuSet:      ctx.String("cpushare"),
-		})
+		}, containerName)
 		// 直接删除挂载的文件
-		mntURL := "/root/mnt/"
-		rootURL := "/root/"
-		container.DeleteWorkSpace(rootURL, mntURL,volume)
+
+		container.DeleteWorkSpace(volume)
 		return nil
 	},
 }
@@ -80,5 +102,70 @@ var initCommand = cli.Command{
 		logrus.Infof("init come on")
 		logrus.Infof("send in command %s", ctx.Args())
 		return container.RunContainerInitProcess()
+	},
+}
+
+// 定义打包镜像的 commitCommand ,传入对应的镜像名
+var commieCommand = cli.Command{
+	Name:  "commit",
+	Usage: "commit a container into image",
+	Action: func(ctx *cli.Context) error {
+		if len(ctx.Args()) < 1 {
+			return fmt.Errorf("")
+		}
+		imageName := ctx.Args().Get(0)
+		commitContainer(imageName)
+		return nil
+	},
+}
+
+var listCommand = cli.Command{
+	Name:  "ps",
+	Usage: "list all the containers",
+	Action: func(ctx *cli.Context) error {
+		// 列出所有的 containerInfo
+		ListContainer()
+		return nil
+	},
+}
+
+// docker logs
+var logCommand = cli.Command{
+	Name:  "logs",
+	Usage: "print logs of a container",
+	Action: func(ctx *cli.Context) error {
+		if len(ctx.Args()) < 1 {
+			return fmt.Errorf("Please input container name")
+		}
+		containerName := ctx.Args().Get(0)
+		logContainer(containerName)
+		return nil
+	},
+}
+
+// docker exec 进入容器
+var execCommand = cli.Command{
+	Name:  "exec",
+	Usage: "exec a command into container",
+	Action: func(ctx *cli.Context) error {
+		// 环境变量 copyDocker_pid 的值
+		if os.Getenv(ENV_EXEC_PID) != "" {
+			logrus.Infof("pid callback pid %s", os.Getpid())
+			return nil
+		}
+		// 命令格式 copyDocker exec containerName cmd
+		if len(ctx.Args()) < 2 {
+			return fmt.Errorf("Missing container name or command.")
+		}
+		containerName := ctx.Args().Get(0)
+		var commandArray []string
+
+		// 除了容器名之外，其它参数都当作需要执行的命令执行
+		for _, arg := range ctx.Args().Tail() {
+			commandArray = append(commandArray, arg)
+		}
+		// 执行命令
+		ExecContainer(containerName, commandArray)
+		return nil
 	},
 }

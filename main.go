@@ -22,7 +22,14 @@ func main() {
 	app.Name = "copyDocker" // 程序名
 
 	// 设置 commands
-	app.Commands = []cli.Command{initCommand, runCommand}
+	app.Commands = []cli.Command{
+		initCommand,
+		runCommand,
+		commieCommand,
+		listCommand,
+		logCommand,
+	}
+
 
 	app.Before = func(ctx *cli.Context) error {
 		logrus.SetFormatter(&logrus.JSONFormatter{})
