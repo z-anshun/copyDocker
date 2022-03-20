@@ -40,7 +40,7 @@ func ListContainer() {
 	fmt.Fprint(w,"ID\tNAME\tPID\tStatus\tCommand\tCreated\n")
 	for _,itme:=range containers{
 		// 打印出来
-		fmt.Fprint(w,"%s\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(w,"%s\t%s\t%s\t%s\t%s\t%s\n",
 			itme.ID,
 			itme.Name,
 			itme.Pid,
