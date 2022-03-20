@@ -28,8 +28,10 @@ func main() {
 		commieCommand,
 		listCommand,
 		logCommand,
+		stopCommand,
+		execCommand,
+		removeCommand,
 	}
-
 
 	app.Before = func(ctx *cli.Context) error {
 		logrus.SetFormatter(&logrus.JSONFormatter{})

@@ -14,7 +14,7 @@ import (
  @Date: Creat in 23:14 2022/3/13
  @Description: copyDocker
 */
-
+// docker run imageName  -ti -name containerName
 var runCommand = cli.Command{
 	Name:  "run", // 命令名
 	Usage: "Create a container with Namespace and Cgroups (run -ti [command])",
@@ -51,6 +51,10 @@ var runCommand = cli.Command{
 			Name:  "name",
 			Usage: "container name",
 		},
+		cli.StringSliceFlag{
+			Name: "e",
+			Usage: "set env",
+		},
 	},
 	// 正在 run 的函数
 	// 1. 判断用户是否包含 command
@@ -78,14 +82,16 @@ var runCommand = cli.Command{
 		// 将容器名传递下去
 		containerName := ctx.String("name")
 
+		imageName:=cmdArray[0]
+		cmdArray=cmdArray[1:]
+
+		envSlice:=ctx.StringSlice("e")
+
 		Run(tty, cmdArray, volume, &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("m"),
 			CpuShare:    ctx.String("cpuset"),
 			CpuSet:      ctx.String("cpushare"),
-		}, containerName)
-		// 直接删除挂载的文件
-
-		container.DeleteWorkSpace(volume)
+		}, containerName,imageName,envSlice)
 		return nil
 	},
 }
@@ -106,15 +112,17 @@ var initCommand = cli.Command{
 }
 
 // 定义打包镜像的 commitCommand ,传入对应的镜像名
+// docker commit containerName imgaeName
 var commieCommand = cli.Command{
 	Name:  "commit",
 	Usage: "commit a container into image",
 	Action: func(ctx *cli.Context) error {
-		if len(ctx.Args()) < 1 {
-			return fmt.Errorf("")
+		if len(ctx.Args()) < 2 {
+			return fmt.Errorf("Missing container name and image name")
 		}
-		imageName := ctx.Args().Get(0)
-		commitContainer(imageName)
+		containerName:=ctx.Args().Get(0)
+		imageName := ctx.Args().Get(1)
+		commitContainer(containerName,imageName)
 		return nil
 	},
 }
@@ -166,6 +174,33 @@ var execCommand = cli.Command{
 		}
 		// 执行命令
 		ExecContainer(containerName, commandArray)
+		return nil
+	},
+}
+
+// docker stop
+var stopCommand = cli.Command{
+	Name:  "stop",
+	Usage: "Stop a container",
+	Action: func(ctx *cli.Context) error {
+		if len(ctx.Args()) < 1 {
+			return fmt.Errorf("Missing container name")
+		}
+		containerName := ctx.Args().Get(0)
+		stopContainer(containerName)
+		return nil
+	},
+}
+
+var removeCommand = cli.Command{
+	Name:  "rm",
+	Usage: "remove unused containers",
+	Action: func(ctx *cli.Context) error {
+		if len(ctx.Args()) < 1 {
+			return fmt.Errorf("Missing container name")
+		}
+		containerName := ctx.Args().Get(0)
+		removeContainer(containerName)
 		return nil
 	},
 }

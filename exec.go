@@ -41,6 +41,9 @@ func ExecContainer(containerName string, commandArray []string) {
 
 	os.Setenv(ENV_EXEC_PID, pid)
 	os.Setenv(ENV_EXEC_CMD, cmdStr)
+	// 获取对应的变量
+	containerEnvs := getEnvsByPid(pid)
+	cmd.Env = append(os.Environ(), containerEnvs...)
 
 	if err := cmd.Run(); err != nil {
 		logrus.Errorf("Exec container %s error: %v", containerName, err)
@@ -62,4 +65,18 @@ func getContainerPidByName(containerName string) (string, error) {
 		return "", err
 	}
 	return containerInfo.Pid, err
+}
+
+// 根据 Pid 来获取 Envs
+func getEnvsByPid(pid string) []string {
+	// 进程存放环境变量的位置为 /proc/PID/environ
+	path := fmt.Sprintf("/proc/%s/environ", pid)
+	contentBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		logrus.Errorf("Read file %s error %v", path, err)
+		return nil
+	}
+	// 多个环境变量的分隔符为 \u0000
+	envs := strings.Split(string(contentBytes), "\u0000")
+	return envs
 }

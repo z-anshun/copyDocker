@@ -15,17 +15,15 @@ import (
 */
 
 var (
-	rootURL = "/root/"
-)
-
-var (
 	RUNNING             string = "running"
 	STOP                string = "stop"
 	Exit                string = "exit"
 	DefaultInfoLocation string = "/var/run/copyDocker/%s/"
 	ConfigName          string = "config.json"
 	ContainerLogFile    string = "container.log"
-	MntURL                     = "/root/mnt/"
+	MntURL              string = "/root/mnt/%s"
+	RootURL             string = "/root"
+	WriteLayerUrl       string = "/root/writeLayer/%s"
 )
 
 // ContainerInfo 存储容器的信息
@@ -36,6 +34,7 @@ type ContainerInfo struct {
 	Command     string `json:"command"`      // 容器内 init 进程的运行命令
 	CreatedTime string `json:"created_time"` // 创建时间
 	Status      string `json:"status"`       // 容器状态
+	Volume      string `json:"volume"`       //容器的数据卷
 }
 
 // NewParentProcess 父进程
@@ -43,7 +42,8 @@ type ContainerInfo struct {
 这里的/proc/self/exe 调用中，/proc/self/ 指当前运行进程自己的环境，那么后面跟个exe，
 就是自己调用了自己
 */
-func NewParentProcess(tty bool, volume, containerName string) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool, volume, containerName,
+	imageName string,envSlice []string) (*exec.Cmd, *os.File) {
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		logrus.Errorf("New pipe error %v", err)
@@ -84,8 +84,11 @@ func NewParentProcess(tty bool, volume, containerName string) (*exec.Cmd, *os.Fi
 	// 进程默认会有三个文件描述，标准输入、输出、错误。所以这里要绑定一个额外的文件描述符
 	cmd.ExtraFiles = []*os.File{readPipe}
 
-	NewWorkSpace(rootURL, MntURL, volume)
-	cmd.Dir = MntURL
+	// 添加环境
+	cmd.Env = append(os.Environ(), envSlice...)
+
+	NewWorkSpace(volume, imageName, containerName)
+	cmd.Dir = fmt.Sprintf(MntURL, containerName)
 	return cmd, writePipe
 }
 

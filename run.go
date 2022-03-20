@@ -23,8 +23,15 @@ import (
 // Run Start 方法前的调用，即init的实现。首先 clone 一个 namespace 隔离进程
 // 然后，在子进程中，调用/proc/self/exe(即自己)，发送init参数，就是实现了init初始化,
 // 使用 pivot_root 将 root 目录切换 pivot new_root put_old
-func Run(tty bool, comArray []string,volume string, res *subsystems.ResourceConfig, containerName string) {
-	parent, writePipe := container.NewParentProcess(tty, volume,containerName)
+func Run(tty bool, comArray []string, volume string, res *subsystems.ResourceConfig,
+	containerName, imageName string, envSlice []string) {
+	// 保证容器名不为空
+	if containerName == "" {
+		containerName = randStringBytes(10)
+	}
+
+	parent, writePipe := container.NewParentProcess(tty, volume, containerName,
+		imageName,envSlice)
 	if parent == nil {
 		logrus.Errorf("Create New Process error")
 		return
@@ -34,7 +41,7 @@ func Run(tty bool, comArray []string,volume string, res *subsystems.ResourceConf
 	}
 
 	// 记录容器信息,并返回容器名
-	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName)
+	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName, volume)
 	if err != nil {
 		logrus.Errorf("Record container info error: %v", err)
 		return
@@ -55,21 +62,19 @@ func Run(tty bool, comArray []string,volume string, res *subsystems.ResourceConf
 	if tty {
 		parent.Wait()
 		delContainerInfo(containerName)
+		container.DeleteWorkSpace(volume, containerName)
 	}
 
 }
 
 // 记录容器的信息
-func recordContainerInfo(containerPID int, commandArray []string, containerName string) (string, error) {
+func recordContainerInfo(containerPID int, commandArray []string, containerName, volume string) (string, error) {
 	// 生成容器的随机ID
 	id := randStringBytes(10)
 	// 当前时间创的容器
 	createTime := time.Now().Format("2006-01-02 15:04:05")
 	command := strings.Join(commandArray, "")
-	// 如果没有指定容器名，那么以当前容器ID为名
-	if containerName == "" {
-		containerName = id
-	}
+
 	// 对应的信息实体
 	containerInfo := &container.ContainerInfo{
 		ID:          id,
@@ -78,6 +83,7 @@ func recordContainerInfo(containerPID int, commandArray []string, containerName 
 		CreatedTime: createTime,
 		Status:      container.RUNNING,
 		Name:        containerName,
+		Volume:      volume,
 	}
 
 	// json 序列化

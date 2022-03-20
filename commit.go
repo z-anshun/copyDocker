@@ -2,6 +2,7 @@ package main
 
 import (
 	"copyDocker/container"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"os/exec"
 )
@@ -13,12 +14,13 @@ import (
 */
 
 // 打包函数具体方法的实现
-func commitContainer(imageName string) {
-	imageTar:="/root/"+imageName+".tar"
-	logrus.Infof("tar image: %s",imageTar)
+func commitContainer(containerName, imageName string) {
+	mntUrl := fmt.Sprintf(container.MntURL, containerName) + "/"
+	imageTar := container.RootURL + "/" + imageName + ".tar"
+	logrus.Infof("tar image: %s", imageTar)
 	// tar -czf /root/${}.tar -C .
-	if _,err:=exec.Command("tar","-czf",imageTar,"-C",container.MntURL,".").
-		CombinedOutput();err!=nil{
-			logrus.Errorf("Tar folder %s error:%v", container.MntURL ,err)
+	if _, err := exec.Command("tar", "-czf", imageTar, "-C", mntUrl, ".").
+		CombinedOutput(); err != nil {
+		logrus.Errorf("Tar folder %s error:%v", container.MntURL, err)
 	}
 }
