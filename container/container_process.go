@@ -17,7 +17,7 @@ import (
 var (
 	RUNNING             string = "running"
 	STOP                string = "stop"
-	Exit                string = "exit"
+	Exit                string = "exited"
 	DefaultInfoLocation string = "/var/run/copyDocker/%s/"
 	ConfigName          string = "config.json"
 	ContainerLogFile    string = "container.log"
@@ -44,6 +44,7 @@ type ContainerInfo struct {
 */
 func NewParentProcess(tty bool, volume, containerName,
 	imageName string,envSlice []string) (*exec.Cmd, *os.File) {
+
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		logrus.Errorf("New pipe error %v", err)

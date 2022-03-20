@@ -26,8 +26,9 @@ import (
 func Run(tty bool, comArray []string, volume string, res *subsystems.ResourceConfig,
 	containerName, imageName string, envSlice []string) {
 	// 保证容器名不为空
+	containerID := randStringBytes(10)
 	if containerName == "" {
-		containerName = randStringBytes(10)
+		containerName = containerID
 	}
 
 	parent, writePipe := container.NewParentProcess(tty, volume, containerName,
@@ -41,14 +42,14 @@ func Run(tty bool, comArray []string, volume string, res *subsystems.ResourceCon
 	}
 
 	// 记录容器信息,并返回容器名
-	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName, volume)
+	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName,containerID, volume)
 	if err != nil {
 		logrus.Errorf("Record container info error: %v", err)
 		return
 	}
 
 	// 创建 cgroup manager，通过 set 设置，apply加入实现资源限制
-	cgroupManager := cgroups.NewCgroupManager("copyDocker-cgroup")
+	cgroupManager := cgroups.NewCgroupManager(containerID)
 	defer cgroupManager.Destroy()
 	// set 设置资源
 	cgroupManager.Set(res)
@@ -68,9 +69,8 @@ func Run(tty bool, comArray []string, volume string, res *subsystems.ResourceCon
 }
 
 // 记录容器的信息
-func recordContainerInfo(containerPID int, commandArray []string, containerName, volume string) (string, error) {
-	// 生成容器的随机ID
-	id := randStringBytes(10)
+func recordContainerInfo(containerPID int, commandArray []string, containerName,id, volume string) (string, error) {
+
 	// 当前时间创的容器
 	createTime := time.Now().Format("2006-01-02 15:04:05")
 	command := strings.Join(commandArray, "")

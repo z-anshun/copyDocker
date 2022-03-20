@@ -103,7 +103,7 @@ func CreateMountPoint(containerName, imageName string) {
 	// /root/${}
 	tmpImageLocation := RootURL + "/" + imageName
 	// mount -t aufs -o dirs=/root/writeLayer/${}:/root/${} none ./mnt
-	dirs := "dirs=" + tmpWriteLayer + "writeLayer:" + tmpImageLocation
+	dirs := "dirs=" + tmpWriteLayer + ":" + tmpImageLocation
 	cmd := exec.Command("mount", "-t", "aufs", "-o", dirs, "none", mntUrl)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
