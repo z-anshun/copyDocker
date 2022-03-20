@@ -38,7 +38,7 @@ __attribute__((constructor)) void enter_namespace(void) {
 
     for (i = 0; i < 5; i++) {
         // 拼接路径 /proc/$$/ns/ipc
-        sprintf(nspath, "/proc/%s/ns/%s", copyDocker_pid, copyDocker_cmd);
+        sprintf(nspath, "/proc/%s/ns/%s", copyDocker_pid, namespaces[i]);
         int fd = open(nspath, O_RDONLY);
         // 真正调用 setns 系统调用进入对应的 Namespace
         if (setns(fd, 0) != -1) {
