@@ -52,7 +52,5 @@ __attribute__((constructor)) void enter_namespace(void) {
     exit(0);
     return;
 }
-
 */
-
 import "C"

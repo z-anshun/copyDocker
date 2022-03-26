@@ -28,13 +28,14 @@ var (
 
 // ContainerInfo 存储容器的信息
 type ContainerInfo struct {
-	Pid         string `json:"pid"`          // 容器的init进程在宿主机上对应的PID
-	ID          string `json:"id"`           // 容器ID
-	Name        string `json:"name"`         // 容器名
-	Command     string `json:"command"`      // 容器内 init 进程的运行命令
-	CreatedTime string `json:"created_time"` // 创建时间
-	Status      string `json:"status"`       // 容器状态
-	Volume      string `json:"volume"`       //容器的数据卷
+	Pid         string   `json:"pid"`          // 容器的init进程在宿主机上对应的PID
+	ID          string   `json:"id"`           // 容器ID
+	Name        string   `json:"name"`         // 容器名
+	Command     string   `json:"command"`      // 容器内 init 进程的运行命令
+	CreatedTime string   `json:"created_time"` // 创建时间
+	Status      string   `json:"status"`       // 容器状态
+	Volume      string   `json:"volume"`       //容器的数据卷
+	PortMapping []string `json:"port_mapping"`
 }
 
 // NewParentProcess 父进程
@@ -43,7 +44,7 @@ type ContainerInfo struct {
 就是自己调用了自己
 */
 func NewParentProcess(tty bool, volume, containerName,
-	imageName string,envSlice []string) (*exec.Cmd, *os.File) {
+	imageName string, envSlice []string) (*exec.Cmd, *os.File) {
 
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {

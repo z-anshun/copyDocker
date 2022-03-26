@@ -121,15 +121,22 @@ func DeleteWorkSpace(volume, containerName string) {
 		volumeURLs := volumeUrlExtract(volume)
 		length := len(volumeURLs)
 		if length == 2 && volumeURLs[0] != "" && volumeURLs[1] != "" {
-			DeleteMountPointWithVolume(volumeURLs, containerName)
-		} else {
-			DeleteMountPoint(containerName)
+			DeleteVolume(volumeURLs, containerName)
 		}
-	} else {
-		DeleteMountPoint(containerName)
 	}
 
+	DeleteMountPoint(containerName)
 	DeleteWriteLayer(containerName)
+}
+
+func DeleteVolume(volumeURLs []string, containerName string)error{
+	mntUrl:=fmt.Sprintf(MntURL,containerName)
+	containerUrl:=mntUrl+"/"+volumeURLs[1]
+	if _,err:=exec.Command("umount",containerUrl).CombinedOutput();err!=nil{
+		logrus.Errorf("Umount volume %s failed. %v", containerUrl, err)
+		return err
+	}
+	return nil
 }
 
 // DeleteMountPointWithVolume 删除挂载点，且删除对应的数据卷
@@ -164,14 +171,12 @@ func DeleteMountPointWithVolume(volumeURLs []string, containerName string) {
 // DeleteMountPoint umount && del
 func DeleteMountPoint(containerName string) {
 	mntUrl := fmt.Sprintf(MntURL, containerName)
-	cmd := exec.Command("umount", mntUrl)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	_, err := exec.Command("umount", mntUrl).CombinedOutput()
+	if err != nil {
 		logrus.Errorf("%v", err)
 	}
 	if err := os.RemoveAll(mntUrl); err != nil {
-		logrus.Errorf("Remove dir %s error:%v", mntUrl, err)
+		logrus.Errorf("Remove mountpoint dir %s error:%v", mntUrl, err)
 	}
 }
 
